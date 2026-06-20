@@ -715,6 +715,11 @@ text_sensor:
       }
       return std::string("Connected");
 
+  # --- NOTE : Operation Mode (registre 201) ---
+  # Le registre 201 = Grid Frequency en Version A MAIS = Operation Mode en SMG-II.
+  # Impossible d'avoir les deux dans ce fichier. Utiliser Version B (SMG-II)
+  # si besoin d'Operation Mode. Les deux versions coexistent pour test.
+
   # --- A TESTER : Fault/Warning codes ---
   # Si ces capteurs retournent des valeurs, c'est que le protocole
   # supporte aussi les registres 100/108. Sinon, les supprimer.
