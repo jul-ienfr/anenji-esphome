@@ -5,3 +5,10 @@
 *.rbl
 *.crc
 *.ota.bin
+
+# IDE
+.vscode/
+
+# Python
+__pycache__/
+*.pyc

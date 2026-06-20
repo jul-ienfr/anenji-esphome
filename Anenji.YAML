@@ -110,14 +110,17 @@ sensor:
           if (x < 15.0 || x > 35.0) return NAN;
           return x;
       - lambda: |-
-          // Delta filter : OFF en debug, 0.5 en production
+          // Delta filter : OFF en debug, 0.1V en production
           if (id(debug_mode).state) return x;
           static float last = NAN;
-          if (std::isnan(last) || std::abs(x - last) >= 0.5) {
+          if (std::isnan(last) || std::abs(x - last) >= 0.1) {
             last = x;
             return x;
           }
           return NAN;
+      - sliding_window_moving_average:
+          window_size: 3
+          send_every: 3
     on_value_range:
       - above: 30.0
         then:
@@ -165,6 +168,7 @@ sensor:
     unit_of_measurement: "%"
     device_class: battery
     icon: "mdi:battery-half"
+    skip_updates: 3
     filters:
       - lambda: |-
           if (x < 0 || x > 100) return NAN;
@@ -198,7 +202,7 @@ sensor:
       - lambda: |-
           if (id(debug_mode).state) return x;
           static float last = NAN;
-          if (std::isnan(last) || std::abs(x - last) >= 5.0) {
+          if (std::isnan(last) || std::abs(x - last) >= 3.0) {
             last = x;
             return x;
           }
@@ -238,7 +242,7 @@ sensor:
       - lambda: |-
           if (id(debug_mode).state) return x;
           static float last = NAN;
-          if (std::isnan(last) || std::abs(x - last) >= 0.5) {
+          if (std::isnan(last) || std::abs(x - last) >= 0.3) {
             last = x;
             return x;
           }
@@ -261,7 +265,7 @@ sensor:
       - lambda: |-
           if (id(debug_mode).state) return x;
           static float last = NAN;
-          if (std::isnan(last) || std::abs(x - last) >= 10.0) {
+          if (std::isnan(last) || std::abs(x - last) >= 5.0) {
             last = x;
             return x;
           }
@@ -291,6 +295,7 @@ sensor:
     device_class: voltage
     icon: "mdi:transmission-tower"
     lambda: "return x * 0.1;"
+    skip_updates: 5
     filters:
       - lambda: |-
           if (x < 0 || x > 300.0) return NAN;
@@ -314,6 +319,7 @@ sensor:
     device_class: frequency
     icon: "mdi:transmission-tower"
     lambda: "return x * 0.01;"
+    skip_updates: 5
     filters:
       - lambda: |-
           if (x < 40.0 || x > 60.0) return NAN;
@@ -359,7 +365,7 @@ sensor:
       - lambda: |-
           if (id(debug_mode).state) return x;
           static float last = NAN;
-          if (std::isnan(last) || std::abs(x - last) >= 10.0) {
+          if (std::isnan(last) || std::abs(x - last) >= 5.0) {
             last = x;
             return x;
           }
@@ -390,6 +396,7 @@ sensor:
     device_class: temperature
     icon: "mdi:thermometer"
     lambda: "return x * 0.1;"
+    skip_updates: 2
     filters:
       - lambda: |-
           if (x < -20.0 || x > 80.0) return NAN;
@@ -446,12 +453,14 @@ number:
               // === DEBUG MODE ===
               ESP_LOGW("mode", "=== DEBUG MODE ACTIVE ===");
               id(anenji).set_update_interval(5000);
-              ESP_LOGW("mode", "Modbus: 5s | Delta: OFF | skip: 0");
+              id(status_led).turn_on();
+              ESP_LOGW("mode", "Modbus: 5s | Delta: OFF | LED: ON");
             } else {
               // === MODE PRODUCTION ===
               ESP_LOGW("mode", "=== MODE PRODUCTION ===");
               id(anenji).set_update_interval(10000);
-              ESP_LOGW("mode", "Modbus: 10s | Delta: 0.5V | skip: 1");
+              id(status_led).turn_off();
+              ESP_LOGW("mode", "Modbus: 10s | Delta: 0.1V | LED: OFF");
             }
 
   - platform: template
@@ -602,6 +611,33 @@ switch:
     register_type: holding
     bitmask: 0x01
     entity_category: config
+
+  # --- Status LED (GPIO2) ---
+  - platform: gpio
+    name: "Status LED"
+    id: status_led
+    pin: GPIO2
+    inverted: true
+    icon: "mdi:led-on"
+    entity_category: config
+
+  # --- Web Server toggle ---
+  - platform: template
+    name: "Web Server"
+    id: web_server_enabled
+    optimistic: true
+    icon: "mdi:web"
+    restore_value: true
+    on_turn_on:
+      then:
+        - logger.log:
+            format: "Web Server enabled"
+            level: INFO
+    on_turn_off:
+      then:
+        - logger.log:
+            format: "Web Server disabled"
+            level: INFO
 
 # ========== DIAGNOSTICS ==========
 text_sensor:
