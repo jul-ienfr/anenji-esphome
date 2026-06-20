@@ -627,7 +627,6 @@ switch:
     id: web_server_enabled
     optimistic: true
     icon: "mdi:web"
-    restore_value: true
     on_turn_on:
       then:
         - logger.log:
