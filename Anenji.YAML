@@ -129,7 +129,7 @@ sensor:
     id: battery_power
     unit_of_measurement: "W"
     device_class: power
-    icon: "mdi:battery charging"
+    icon: "mdi:battery-charging"
     lambda: |-
       float v = id(battery_voltage).state;
       float a = id(battery_current).state;
